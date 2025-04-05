@@ -178,6 +178,32 @@ def semi_lagrangian(field: Field,
     interpolated = reduce_sample(field, lookup)
     return field.with_values(interpolated)
 
+# TODO Finish this
+def covector(field: Field,
+                    velocity: Field,
+                    dt: float,
+                    integrator=euler) -> Field:
+    """
+    Semi-Lagrangian advection with simple backward lookup.
+
+    This method samples the `velocity` at the grid points of `field`
+    to determine the lookup location for each grid point by walking backwards along the velocity vectors.
+    The new values are then determined by sampling `field` at these lookup locations.
+
+    Args:
+        field: quantity to be advected, stored on a grid (CenteredGrid or StaggeredGrid)
+        velocity: vector field, need not be compatible with with `field`.
+        dt: time increment
+        integrator: ODE integrator for solving the movement.
+
+    Returns:
+        Field with same sample points as `field`
+
+    """
+    lookup = integrator(field, velocity, -dt)
+    interpolated = reduce_sample(field, lookup)
+    return field.with_values(interpolated)
+
 
 def mac_cormack(field: Field,
                 velocity: Field,
