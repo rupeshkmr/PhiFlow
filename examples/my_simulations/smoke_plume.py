@@ -17,14 +17,27 @@ inflow_rate = 0.2
 # define timestep update each iteration
 @jit_compile
 def step(v, s, p, dt):
-    s = advect.mac_cormack(s, v, dt) + inflow_rate * resample(inflow, to=s, soft=True)
+    s = advect.semi_lagrangian(s, v, dt) + inflow_rate * resample(inflow, to=s, soft=True)
     buoyancy = resample(s * (0, 0.1), to=v)
     v = advect.mac_cormack(v, v, dt) + buoyancy * dt
     v, p = fluid.make_incompressible(v, (), Solve('CG', 1e-3, x0=p))
     return v, s, p
 
-v0 = StaggeredGrid(0, 0, domain, x=64, y=64)
+v0 = StaggeredGrid(0, 0, domain, x=200, y=200)
+print(v0)
+print(v0.points)
+print(v0.points['x'].x[0].y[0])
+# print(v0.points['x'].x[0].y[0].vector['x'])
+print(v0.values['x'].x[0].y[0])
+print(v0.points['y'].x[0].y[0])
+print(v0.points['y'].x[0].y[0].vector['x'])
+# print(v0.values)
+exit(0)
 smoke0 = CenteredGrid(0, ZERO_GRADIENT, domain, x=200, y=200)
+print(smoke0)
+print(smoke0.points.x[0].y[0])
+print(smoke0.values.x[0].y[0])
+exit(0)
 v_trj, s_trj, p_trj = iterate(step, batch(time=300), v0, smoke0, None, dt=.5, range=trange, substeps=3)
 print(type(v_trj))
 
